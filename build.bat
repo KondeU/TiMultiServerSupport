@@ -1,3 +1,4 @@
+echo on
 cd %~dp0
 
 set RUN_MODE=%1
