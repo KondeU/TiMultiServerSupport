@@ -69,6 +69,8 @@ rem ===== build trace <src> =====
 
 mkdir build\build_src
 cd build\build_src
+cmake -G "%BUILD_COMPILE%" %BUILD_ARCH_ARG% ../../src
+cmake --build . --config %BUILD_TYPE% -j 8
 cd ..\..
 
 :_tag_archive
