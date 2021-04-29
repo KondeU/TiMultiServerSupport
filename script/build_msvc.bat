@@ -14,10 +14,6 @@ if "%BUILD_COMPILE%"=="VS2015" (set BUILD_COMPILE=Visual Studio 14 2015)
 if "%BUILD_COMPILE%"=="VS2017" (set BUILD_COMPILE=Visual Studio 15 2017)
 if "%BUILD_COMPILE%"=="VS2019" (set BUILD_COMPILE=Visual Studio 16 2019)
 
-if "%BUILD_COMPILE%"=="Visual Studio 14 2015" (set Qt5_DIR=%Qt5_DIR%\msvc2015)
-if "%BUILD_COMPILE%"=="Visual Studio 15 2017" (set Qt5_DIR=%Qt5_DIR%\msvc2017)
-if "%BUILD_COMPILE%"=="Visual Studio 16 2019" (set Qt5_DIR=%Qt5_DIR%\msvc2017)
-
 rem only VS2019 uses "BUILD_ARCH_ARG"
 set BUILD_ARCH_ARG=
 if "%BUILD_COMPILE%"=="Visual Studio 16 2019" (
@@ -27,13 +23,7 @@ else (set BUILD_ARCH_ARG=-A Win32)
 if "%BUILD_BITS%"=="x64" (set BUILD_COMPILE=%BUILD_COMPILE% Win64)
 )
 
-if "%QTDIR%"=="" (
-if "%BUILD_BITS%"=="x64" (set Qt5_DIR=%Qt5_DIR%_64)
-set QTDIR=%Qt5_DIR%
-set Qt5_DIR=%Qt5_DIR%\lib\cmake\Qt5
-)
-
-if exist "build\dependency" (goto _tag_build_trace_cmn)
+if exist "build\dependency" (goto _tag_build_trace_src)
 
 :_tag_build_trace_3rd
 rem ===== build trace <3rd> =====
@@ -50,7 +40,7 @@ cmake -G "%BUILD_COMPILE%" %BUILD_ARCH_ARG% ^
 -DZMQ_BUILD_TESTS=OFF ^
 -DCMAKE_INSTALL_PREFIX=%~dp0..\build\dependency\zeromq\zeromq ^
 -DWITH_LIBSODIUM=OFF ^
-../../../../3rd/zeromq/zeromq-4.3.3
+../../../../3rd/zeromq
 cmake --build . --config %BUILD_TYPE% -j 8
 cmake --install . --config %BUILD_TYPE%
 cd ..
@@ -61,7 +51,7 @@ cmake -G "%BUILD_COMPILE%" %BUILD_ARCH_ARG% ^
 -DCPPZMQ_BUILD_TESTS=OFF ^
 -DCMAKE_INSTALL_PREFIX=%~dp0..\build\dependency\zeromq\cppzmq ^
 -DZeroMQ_DIR=%~dp0..\build\dependency\zeromq\zeromq\CMake ^
-../../../../3rd/zeromq/cppzmq-4.7.1
+../../../../3rd/cppzmq
 cmake --build . --config %BUILD_TYPE% -j 8
 cmake --install . --config %BUILD_TYPE%
 cd ..
@@ -71,28 +61,18 @@ cd ..\..\..
 mkdir build\dependency\cereal
 cd build\dependency\cereal
 mkdir include
-xcopy %~dp0..\3rd\cereal\cereal-1.3.0\include include /E /Y
+xcopy %~dp0..\3rd\cereal\include include /E /Y
 cd ..\..\..
 
-:_tag_build_trace_cmn
-rem ===== build trace <cmn> =====
+:_tag_build_trace_src
+rem ===== build trace <src> =====
 
-mkdir build\build_cmn
-cd build\build_cmn
-cd ..\..
-
-mkdir build\common
-cd build\common
-cd ..\..
-
-:_tag_build_trace_tsf
-rem ===== build trace <tsf> =====
-
-mkdir build\build_tsf
-cd build\build_tsf
+mkdir build\build_src
+cd build\build_src
 cd ..\..
 
 :_tag_archive
+rem ===== archive =====
 
 mkdir build\archive
 cd build\archive
