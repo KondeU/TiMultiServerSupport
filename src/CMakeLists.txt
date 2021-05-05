@@ -12,15 +12,11 @@ include_directories(../build/dependency/zeromq/zeromq/include)
 include_directories(../build/dependency/zeromq/cppzmq/include)
 
 link_directories(../build/dependency/zeromq/zeromq/lib)
+link_libraries(libzmq)
 
-add_executable(TestRPC_Client TestRPC_Client.cpp)
-target_link_libraries(TestRPC_Client libzmq)
+file(GLOB_RECURSE INC ../include/*)
 
-add_executable(TestRPC_Server TestRPC_Server.cpp)
-target_link_libraries(TestRPC_Server libzmq)
-
-add_executable(TestStatusSync_Client TestStatusSync_Client.cpp)
-target_link_libraries(TestStatusSync_Client libzmq)
-
-add_executable(TestStatusSync_Server TestStatusSync_Server.cpp)
-target_link_libraries(TestStatusSync_Server libzmq)
+add_executable(TestRPC_Client TestRPC_Client.cpp ${INC})
+add_executable(TestRPC_Server TestRPC_Server.cpp ${INC})
+add_executable(TestStatusSync_Client TestStatusSync_Client.cpp ${INC})
+add_executable(TestStatusSync_Server TestStatusSync_Server.cpp ${INC})
