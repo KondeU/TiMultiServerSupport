@@ -1,15 +1,9 @@
 #pragma once
 
-#include <cereal/cereal.hpp>
-#include <cereal/archives/portable_binary.hpp>
+#include "Serializer.hpp"
 
 namespace ti {
 namespace serializer {
-
-class Serializer {
-    using OutputArchive = cereal::PortableBinaryOutputArchive;
-    using InputArchive = cereal::PortableBinaryInputArchive;
-};
 
 class FunctionSerializer : public Serializer {
 public:

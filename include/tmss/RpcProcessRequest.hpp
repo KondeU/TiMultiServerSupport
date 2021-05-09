@@ -2,7 +2,7 @@
 
 namespace ti {
 
-class MultiServerSupport {
+class RpcProcessRequest {
 public:
 };
 
