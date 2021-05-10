@@ -23,7 +23,6 @@ public:
     }
 
 protected:
-public: // FOR TEST!
     void ExecFunc(const std::string& request, std::string& respond)
     {
         std::string funcName;
@@ -109,13 +108,13 @@ public: // FOR TEST!
     {
         constexpr auto Size = std::tuple_size<
             typename std::decay<ArgsTuple>::type>::value;
-        return CallNative(std::forward<Func>(func),
+        return CallInvokeImpl(std::forward<Func>(func),
             std::forward<ArgsTuple>(argsTuple),
             std::make_index_sequence<Size>{});
     }
 
     template <typename Func, typename ArgsTuple, std::size_t ...Index>
-    decltype(auto) CallNative(Func&& func, ArgsTuple&& argsTuple,
+    decltype(auto) CallInvokeImpl(Func&& func, ArgsTuple&& argsTuple,
         std::index_sequence<Index...>)
     {
         return func(std::get<Index>(std::forward<ArgsTuple>(argsTuple))...);
