@@ -6,6 +6,4 @@
 #include "tmss/StatusSyncPrimary.hpp"
 #include "tmss/StatusSyncSecondary.hpp"
 
-#ifdef TI_MSS_IMPL
-ti::communicator::Communicator ti::MultiServerSupportBase::communicator;
-#endif
+#include "tmss/TiMultiServerSupportImpl.inl"

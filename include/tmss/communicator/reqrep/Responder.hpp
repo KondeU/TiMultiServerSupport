@@ -21,7 +21,7 @@ public:
         return true;
     }
 
-    bool StartResponse(std::function<void(const std::string&, std::string&)> proc)
+    bool StartResponse(const std::function<void(const std::string&, std::string&)>& proc)
     {
         if (responds.find(respKey) != responds.end()) {
             return false;
@@ -96,7 +96,7 @@ private:
     friend class Communicator;
 
     explicit Responder(zmq::context_t& context)
-        : context(context), socket(context, ZMQ_REP)
+        : context(context), socket(context, zmq::socket_type::rep)
     {
     }
 

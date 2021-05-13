@@ -50,7 +50,7 @@ private:
     friend class Communicator;
 
     explicit Requester(zmq::context_t& context)
-        : context(context), socket(context, ZMQ_REQ)
+        : context(context), socket(context, zmq::socket_type::req)
     {
     }
 

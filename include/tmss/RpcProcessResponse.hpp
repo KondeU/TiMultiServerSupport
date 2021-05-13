@@ -8,6 +8,54 @@ namespace ti {
 
 class RpcProcessResponse : public MultiServerSupportBase {
 public:
+    RpcProcessResponse()
+    {
+        Communicator().ResetInstInvalid(responder);
+
+        process = // NB: Caution that the life cycle of process!
+        [this](const std::string& request, std::string& respond)
+        {
+            ExecFunc(request, respond);
+        };
+    }
+
+    bool StartProcess(const std::string& selfIp, int selfPort)
+    {
+        if (!Communicator().IsInstInvalid(responder)) {
+            return false;
+        }
+
+        responder = Communicator().CreateResponder(
+            selfIp + ":" + std::to_string(selfPort));
+        if (Communicator().IsInstInvalid(responder)) {
+            return false;
+        }
+
+        if (!responder->StartResponse(process)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    bool StopProcess()
+    {
+        if (Communicator().IsInstInvalid(responder)) {
+            return false;
+        }
+
+        if (!responder->StopResponse() ||
+            !responder->WaitResponse() ||
+            !responder->ResetResponse()) {
+            return false;
+        }
+
+        Communicator().DestroyInstance(Communicator().MakeInstValue(responder));
+        Communicator().ResetInstInvalid(responder);
+
+        return true;
+    }
+
     template <typename Func>
     inline void BindFunc(const std::string& name, Func func)
     {
@@ -123,8 +171,10 @@ protected:
 private:
     std::unordered_map<std::string, std::function<
         void(const std::string&, std::string&)>> rpcs;
+    std::function<void(const std::string&, std::string&)> process;
 
     serializer::FunctionSerializer serializer;
+    communicator::ResponderInst responder;
 };
 
 }
