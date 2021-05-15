@@ -6,12 +6,7 @@ namespace ti {
 namespace serializer {
 
 class SyncDataSerializer : public Serializer {
-// Protocol:
-// |----head----|---msgid--|-hash-|-data-|
-// | uint8_t[4]   uint32_t   Hash   Data |
 public:
-    static constexpr size_t HeadCount = 4;
-
     struct SyncDataBase {
         virtual void Serializer(std::stringstream& ss) = 0;
         virtual void Deserializer(std::stringstream& ss) = 0;
@@ -36,53 +31,31 @@ public:
     };
 
     template <typename Hash>
-    void Serializer(std::string& bin, const std::vector<uint8_t>& head,
-        const uint32_t& msgid, const Hash& hash, const SyncDataBase& data)
+    void Serializer(std::string& data, const uint32_t& msgId,
+        const Hash& hash, const SyncDataBase& syncDataBaseRef)
     {
-        // Serialize head
-        size_t headCount = std::min(head.size(), HeadCount);
-        for (size_t n = 0; n < headCount; n++) {
-            ss << head[n];
-        }
-        size_t paddingCount = HeadCount - headCount;
-        for (size_t n = 0; n < paddingCount; n++) {
-            ss << uint8_t('\0');
-        }
-        // Serialize info
         {
             OutputArchive archive;
-            archive(msgid, hash);
+            archive(msgId, hash);
         }
-        // Serialize data
-        data.Serializer(ss);
-        // Serialized binary
-        bin = ss.str();
-        // Reset stream
+        syncDataBaseRef.Serializer(ss);
+        data = ss.str();
         ss.str("");
     }
 
     template <typename Hash>
-    void Deserializer(const std::string& bin, std::vector<uint8_t>& head,
-        uint32_t& msgid, Hash& hash, const std::function<SyncDataBasePtr(Hash)>& dp)
+    void Deserializer(const std::string& data, uint32_t& msgId,
+        Hash& hash, const std::function<SyncDataBasePtr(Hash)>& dp)
     {
-        // Serialized binary
-        ss.str(bin);
-        // Deserialize head
-        head.resize(HeadCount);
-        for (size_t n = 0; n < HeadCount; n++) {
-            ss >> head[n];
-        }
-        // Deserialize info
+        ss.str(data);
         {
             InputArchive archive;
-            archive(msgid, hash);
+            archive(msgId, hash);
         }
-        // Deserialize data
-        SyncDataBasePtr pdata = dp(hash);
-        if (pdata != nullptr) {
-            pdata->Deserializer(ss);
+        SyncDataBasePtr syncDataBasePtr = dp(hash);
+        if (syncDataBasePtr != nullptr) {
+            syncDataBasePtr->Deserializer(ss);
         }
-        // Reset stream
         ss.str("");
     }
 
