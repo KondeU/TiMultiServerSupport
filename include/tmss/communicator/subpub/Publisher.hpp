@@ -6,6 +6,22 @@ namespace ti {
 namespace communicator {
 
 class Publisher {
+public:
+    bool Init(const std::string& addr)
+    {
+        // addr: server address string:
+        //       x.x.x.x:x means ip:port
+        socket.bind("tcp://" + addr);
+        return true;
+    }
+
+    void FanOut(const std::string& envelope, const std::string& content)
+    {
+        // envelope value must be a pure string.
+        socket.send(zmq::buffer(envelope), zmq::send_flags::sndmore);
+        socket.send(zmq::buffer(content, content.size()), zmq::send_flags::none);
+    }
+
 private:
     friend class Communicator;
 

@@ -43,14 +43,14 @@ public:
         return CreateInstance(responders, server);
     }
 
-    SubscriberInst CreateSubscriber()
+    SubscriberInst CreateSubscriber(const std::string& pubServer)
     {
-        return nullptr;
+        return CreateInstance(subscribers, pubServer);
     }
 
-    PublisherInst CreatePublisher()
+    PublisherInst CreatePublisher(const std::string& server)
     {
-        return nullptr;
+        return CreateInstance(publishers, server);
     }
 
     bool DestroyInstance(InstValue instValue)
