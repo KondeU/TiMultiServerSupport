@@ -236,7 +236,7 @@ message_t encode(const Range &parts)
     message_t encoded(mmsg_size);
     unsigned char *buf = encoded.data<unsigned char>();
     for (const auto &part : parts) {
-        const uint32_t part_size = part.size();
+        const uint32_t part_size = static_cast<uint32_t>(part.size());
         const unsigned char *part_data =
           static_cast<const unsigned char *>(part.data());
 
