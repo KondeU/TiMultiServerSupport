@@ -8,15 +8,6 @@ namespace communicator {
 
 class Requester {
 public:
-    bool Init(const std::string& addr)
-    {
-        // addr: server address string:
-        //      x.x.x.x:x means ip:port
-        // Requester is Req/Rep model's Client.
-        socket.connect("tcp://" + addr);
-        return true;
-    }
-
     int SetTimeout(int ms)
     {
         socket.set(zmq::sockopt::rcvtimeo, ms);
@@ -52,6 +43,15 @@ private:
     explicit Requester(zmq::context_t& context)
         : context(context), socket(context, zmq::socket_type::req)
     {
+    }
+
+    bool Init(const std::string& addr)
+    {
+        // addr: server address string:
+        //      x.x.x.x:x means ip:port
+        // Requester is Req/Rep model's Client.
+        socket.connect("tcp://" + addr);
+        return true;
     }
 
     zmq::context_t& context;

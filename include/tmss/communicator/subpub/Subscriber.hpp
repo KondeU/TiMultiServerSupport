@@ -7,12 +7,10 @@ namespace communicator {
 
 class Subscriber {
 public:
-    bool Init(const std::string& addr)
+    int SetTimeout(int ms)
     {
-        // addr: server address string:
-        //       x.x.x.x:x means ip:port
-        socket.connect("tcp://" + addr);
-        return true;
+        socket.set(zmq::sockopt::rcvtimeo, ms);
+        return socket.get(zmq::sockopt::rcvtimeo);
     }
 
     void Subscribe(const std::string& envelope)
@@ -25,12 +23,6 @@ public:
         socket.set(zmq::sockopt::unsubscribe, envelope);
     }
 
-    int SetTimeout(int ms)
-    {
-        socket.set(zmq::sockopt::rcvtimeo, ms);
-        return socket.get(zmq::sockopt::rcvtimeo);
-    }
-
     CommunicationCode RecvIn(std::string& envelope, std::string& content)
     {
         std::vector<zmq::message_t> messages;
@@ -39,8 +31,7 @@ public:
             return CommunicationCode::ReceiveTimeout;
         }
         // envelope value is a pure string.
-        envelope = envelope.replace(envelope.begin(), envelope.end(),
-            static_cast<char*>(messages[0].data()));
+        envelope = messages[0].to_string();
         content = content.replace(content.begin(), content.end(),
             static_cast<char*>(messages[1].data()), messages[1].size());
         return CommunicationCode::Success;
@@ -52,6 +43,14 @@ private:
     explicit Subscriber(zmq::context_t& context)
         : context(context), socket(context, zmq::socket_type::sub)
     {
+    }
+
+    bool Init(const std::string& addr)
+    {
+        // addr: server address string:
+        //       x.x.x.x:x means ip:port
+        socket.connect("tcp://" + addr);
+        return true;
     }
 
     zmq::context_t& context;

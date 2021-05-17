@@ -8,7 +8,7 @@ namespace ti {
 namespace serializer {
 
 class Serializer {
-public:
+protected:
     using OutputArchive = cereal::PortableBinaryOutputArchive;
     using InputArchive = cereal::PortableBinaryInputArchive;
 };

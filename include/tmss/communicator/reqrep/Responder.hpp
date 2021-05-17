@@ -9,18 +9,6 @@ namespace communicator {
 
 class Responder {
 public:
-    bool Init(const std::string& addr)
-    {
-        // addr: server address string:
-        //      x.x.x.x:x means ip:port
-        //     using *:port to enable all ip
-        // Responder is Req/Rep model's Server.
-        socket.bind("tcp://" + addr);
-        // Responder blocks and calls recv per second.
-        socket.set(zmq::sockopt::rcvtimeo, 1000);
-        return true;
-    }
-
     bool StartResponse(const std::function<void(const std::string&, std::string&)>& proc)
     {
         if (responds.find(respKey) != responds.end()) {
@@ -98,6 +86,18 @@ private:
     explicit Responder(zmq::context_t& context)
         : context(context), socket(context, zmq::socket_type::rep)
     {
+    }
+
+    bool Init(const std::string& addr)
+    {
+        // addr: server address string:
+        //      x.x.x.x:x means ip:port
+        //     using *:port to enable all ip
+        // Responder is Req/Rep model's Server.
+        socket.bind("tcp://" + addr);
+        // Responder blocks and calls recv per second.
+        socket.set(zmq::sockopt::rcvtimeo, 1000);
+        return true;
     }
 
     zmq::context_t& context;
