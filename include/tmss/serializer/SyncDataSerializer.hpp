@@ -36,18 +36,18 @@ public:
             OnDeserialized();
         }
 
-        Data data;
+        Data data {};
     };
 
     template <typename Hash>
     void Serialize(std::string& data, const uint32_t& msgId,
-        const Hash& hash, const SyncDataBase& syncDataBaseRef)
+        const Hash& hash, SyncDataBase& syncDataBaseReference)
     {
         {
             OutputArchive archive;
             archive(msgId, hash);
         }
-        syncDataBaseRef.Serialize(ss);
+        syncDataBaseReference.Serialize(ss);
         data = ss.str();
         ss.str("");
     }
