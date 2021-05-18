@@ -37,6 +37,11 @@ public:
         return CommunicationCode::Success;
     }
 
+    virtual ~Subscriber()
+    {
+        socket.close();
+    }
+
 private:
     friend class Communicator;
 

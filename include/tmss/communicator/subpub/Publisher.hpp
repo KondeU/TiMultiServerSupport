@@ -14,6 +14,11 @@ public:
         socket.send(zmq::buffer(content, content.size()), zmq::send_flags::none);
     }
 
+    virtual ~Publisher()
+    {
+        socket.close();
+    }
+
 private:
     friend class Communicator;
 
