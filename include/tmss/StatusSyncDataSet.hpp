@@ -60,10 +60,18 @@ public:
     std::string category;
     std::function<void()> setChange;
     std::function<void()> onChanged;
+    // For the default unordered_map, the element
+    // memory inside is always valid and unchanged.
+    uint32_t* networkCounter = nullptr; // It is ugly but works.
+    std::string* valueCache = nullptr;  // It is ugly but works too.
+    // The implementation here is a little compromised, and is planning to fix it.
 };
 
 }
 
+// Warning:
+// Only Set and Get functions in the DataSet could used.
+// Other functions and variables are used internally.
 template <typename T>
 using DataSet = dataset::StatusSyncDataSet<T>;
 using DataHash = dataset::StatusSyncDataHash::HashType;
