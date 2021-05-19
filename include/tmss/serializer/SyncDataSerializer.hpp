@@ -44,7 +44,7 @@ public:
         const Hash& hash, SyncDataBase& syncDataBaseReference)
     {
         {
-            OutputArchive archive;
+            OutputArchive archive(ss);
             archive(msgId, hash);
         }
         syncDataBaseReference.Serialize(ss);
@@ -58,9 +58,32 @@ public:
     {
         ss.str(data);
         {
-            InputArchive archive;
+            InputArchive archive(ss);
             archive(msgId, hash);
         }
+        SyncDataBasePtr syncDataBasePtr = dp(hash);
+        if (syncDataBasePtr != nullptr) {
+            syncDataBasePtr->Deserialize(ss);
+        }
+        ss.str("");
+    }
+
+    template <typename Hash>
+    void Serialize(std::string& data,
+        const Hash& hash, SyncDataBase& syncDataBaseReference)
+    {
+        { OutputArchive archive(ss); archive(hash); }
+        syncDataBaseReference.Serialize(ss);
+        data = ss.str();
+        ss.str("");
+    }
+
+    template <typename Hash>
+    void Deserialize(const std::string& data,
+        Hash& hash, const std::function<SyncDataBasePtr(Hash)>& dp)
+    {
+        ss.str(data);
+        { InputArchive archive(ss); archive(hash); }
         SyncDataBasePtr syncDataBasePtr = dp(hash);
         if (syncDataBasePtr != nullptr) {
             syncDataBasePtr->Deserialize(ss);
