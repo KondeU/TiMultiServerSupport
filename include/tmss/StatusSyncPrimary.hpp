@@ -56,12 +56,19 @@ public:
             }
             (*data.networkCounter)++;
             serializer.Serialize(serialized, data.HashCode(), data);
-            lastValueCachingSwapList.emplace_back(data.valueCache, serialized);
+            lastValueCachingSwap[data.valueCache] = serialized;
         };
-        data.networkCounter = &networkPackageCounter[category];
-        data.valueCache = &lastValueCache[category][data.HashCode()];
+        data.networkCounter = &networkPackageCounter[data.category];
+        data.valueCache = &lastValueCache[data.category][data.HashCode()];
 
         return true;
+    }
+
+    void FlashLastValueCache()
+    {
+        for (auto& eachCache : lastValueCachingSwap) {
+            *eachCache.first = eachCache.second;
+        }
     }
 
 private:
@@ -76,9 +83,9 @@ private:
     std::unordered_map<std::string, uint32_t> networkPackageCounter;
 
     // LVC, Memory layout:
-    // lastValueCachingSwapList: <pointer to cache, cache>
-    // lastValueCache:           <category, <hash, cache>>
-    std::vector<std::pair<std::string*, std::string>> lastValueCachingSwapList;
+    // lastValueCachingSwap: <pointer to cache, cache> - snapshot cache
+    // lastValueCache:       <category, <hash, cache>> - snapshot
+    std::unordered_map<std::string*, std::string> lastValueCachingSwap;
     std::unordered_map<std::string, std::unordered_map<DataHash, std::string>> lastValueCache;
 };
 
