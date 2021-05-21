@@ -78,4 +78,25 @@ rem ===== archive =====
 
 mkdir build\archive
 cd build\archive
+
+rem [### Copy dependency header files ###]
+mkdir include\3rd\zeromq
+xcopy ..\dependency\zeromq\zeromq\include include\3rd\zeromq /E /Y
+mkdir include\3rd\cppzmq
+xcopy ..\dependency\zeromq\cppzmq\include include\3rd\cppzmq /E /Y
+mkdir include\3rd\cereal
+xcopy ..\dependency\cereal\include include\3rd\cereal /E /Y
+
+rem [### Copy TiMultiServerSupport header files ###]
+mkdir include\core
+xcopy ..\..\include include\core /E /Y
+
+rem [### Copy ZeroMQ lib and dll files ###]
+mkdir libraries
+copy ..\dependency\zeromq\zeromq\lib\libzmq.lib libraries /Y
+copy ..\dependency\zeromq\zeromq\bin\libzmq.dll libraries /Y
+
+rem [### Copy USER CMakeLists file ###]
+copy ..\..\script\TMSS.CMakeLists.txt .\CMakeLists.txt /Y
+
 cd ..\..
