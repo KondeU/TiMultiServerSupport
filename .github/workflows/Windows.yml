@@ -13,3 +13,8 @@ jobs:
     - name: Build
       shell: cmd
       run: call "${{github.workspace}}\build.bat" ci
+    - name: Publish
+      uses: actions/upload-artifact@v2
+      with:
+        name: TiMultiServerSupport
+        path: ${{github.workspace}}\build\archive
