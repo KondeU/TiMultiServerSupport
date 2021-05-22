@@ -69,6 +69,7 @@ public:
         for (auto& eachCache : lastValueCachingSwap) {
             *eachCache.first = eachCache.second;
         }
+        lastValueCachingSwap.clear();
     }
 
 private:
@@ -78,8 +79,8 @@ private:
     RpcProcessResponse rpcResponder;
 
     // networkPackageCounter is used to count the number of message.
-    // If the number (msgId) is discontinuous, it means that there
-    // is a packet loss at least, so you should request LVC again.
+    // If the number (msgId) is discontinuous, it means that there is
+    // a packet loss at least, so secondary should request a LVC again.
     std::unordered_map<std::string, uint32_t> networkPackageCounter;
 
     // LVC, Memory layout:
@@ -87,6 +88,8 @@ private:
     // lastValueCache:       <category, <hash, cache>> - snapshot
     std::unordered_map<std::string*, std::string> lastValueCachingSwap;
     std::unordered_map<std::string, std::unordered_map<DataHash, std::string>> lastValueCache;
+
+    // TODO: mutex of {each lastValueCachingSwap first}?
 };
 
 }
