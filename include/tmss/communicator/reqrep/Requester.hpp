@@ -20,7 +20,7 @@ public:
         socket.send(reqMsg, zmq::send_flags::none);
 
         zmq::message_t respMsg;
-        socket.recv(respMsg);
+        (void)socket.recv(respMsg);
 
         if (respMsg.size() <= 0) {
             return CommunicationCode::ReceiveTimeout;

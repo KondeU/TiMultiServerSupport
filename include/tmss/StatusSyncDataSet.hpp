@@ -62,9 +62,9 @@ public:
     std::function<void()> onChanged;
     // For the default unordered_map, the element
     // memory inside is always valid and unchanged.
-    uint32_t* networkCounter = nullptr; // It is ugly but works.
-    std::string* valueCache = nullptr;  // It is ugly but works too.
-    // The implementation here is a little compromised, and is planning to fix it.
+    uint32_t* networkCounter = nullptr; // FIXME! It is ugly but works.
+    std::string* valueCache = nullptr;  // FIXME! It is ugly but works too.
+    // The implementation here is compromise, and is planning to fix it later.
 };
 
 }
