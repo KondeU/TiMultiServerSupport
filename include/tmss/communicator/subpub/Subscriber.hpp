@@ -26,7 +26,7 @@ public:
     CommunicationCode RecvIn(std::string& envelope, std::string& content)
     {
         std::vector<zmq::message_t> messages;
-        zmq::recv_multipart(socket, std::back_inserter(messages));
+        (void)zmq::recv_multipart(socket, std::back_inserter(messages));
         if (messages.size() != 2) { // envelope + content
             return CommunicationCode::ReceiveTimeout;
         }

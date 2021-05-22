@@ -23,7 +23,7 @@ public:
             bool& exit = responds.find(respKey)->second.second;
             while (exit) {
                 zmq::message_t reqMsg;
-                socket.recv(reqMsg);
+                (void)socket.recv(reqMsg);
 
                 if (reqMsg.size() > 0) {
                     std::string request;
