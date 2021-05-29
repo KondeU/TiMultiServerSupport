@@ -126,7 +126,7 @@ protected:
         rpc::RpcFuncArgsWrapper<typename std::decay<Params>::type...> funcArgs;
         serializer.Deserialize(request, funcName, funcArgs);
 
-        rpc::RpcReturnType<R>::Type retv = CallInterface<R>(func, funcArgs);
+        typename rpc::RpcReturnType<R>::Type retv = CallInterface<R>(func, funcArgs);
 
         rpc::RpcReturnWrapper<R> funcRetv;
         std::get<rpc::RpcReturnCode>(funcRetv) = rpc::RpcReturnCode::Success;
