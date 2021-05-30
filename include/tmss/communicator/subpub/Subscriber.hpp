@@ -23,18 +23,72 @@ public:
         socket.set(zmq::sockopt::unsubscribe, envelope);
     }
 
-    CommunicationCode RecvIn(std::string& envelope, std::string& content)
+    bool StartReceive(const std::function<void(bool)>& callback, // isReceiveTimeout
+        const std::function<void(const std::string&, const std::string&)>& process)
     {
-        std::vector<zmq::message_t> messages;
-        (void)zmq::recv_multipart(socket, std::back_inserter(messages));
-        if (messages.size() != 2) { // envelope + content
-            return CommunicationCode::ReceiveTimeout;
+        if (subscribes.find(subKey) != subscribes.end()) {
+            return false;
         }
-        // envelope value is a pure string.
-        envelope = messages[0].to_string();
-        content = content.replace(content.begin(), content.end(),
-            static_cast<char*>(messages[1].data()), messages[1].size());
-        return CommunicationCode::Success;
+
+        subscribes.emplace(subKey, std::make_pair(std::thread(
+        [this, &callback, &process]() {
+            while (subscribes.find(subKey) == subscribes.end()) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            } // Spin lock until emplaced
+
+            bool& exit = subscribes.find(subKey)->second.second;
+            while (exit) {
+                std::vector<zmq::message_t> messages;
+                (void)zmq::recv_multipart(socket, std::back_inserter(messages));
+                if (messages.size() != 2) { // envelope + content
+                    callback(true); // true means receive timeout!
+                } else {
+                    std::string envelope;
+                    std::string content;
+
+                    // envelope value is a pure string.
+                    envelope = messages[0].to_string();
+                    content = content.replace(content.begin(), content.end(),
+                        static_cast<char*>(messages[1].data()), messages[1].size());
+                    process(envelope, content);
+                    callback(false);
+                }
+            }
+        }), true));
+
+        return true;
+    }
+
+    bool StopReceive()
+    {
+        auto subIter = subscribes.find(subKey);
+        if (subIter == subscribes.end()) {
+            return false;
+        }
+        subIter->second.second = false;
+        return true;
+    }
+
+    bool WaitReceive()
+    {
+        auto subIter = subscribes.find(subKey);
+        if (subIter == subscribes.end()) {
+            return false;
+        }
+        if (subIter->second.first.joinable()) {
+            subIter->second.first.join();
+        }
+        return true;
+    }
+
+    bool ResetReceive()
+    {
+        auto subIter = subscribes.find(subKey);
+        if (subIter == subscribes.end()) {
+            return false;
+        }
+        subscribes.erase(subIter);
+        return true;
     }
 
     virtual ~Subscriber()
@@ -60,6 +114,9 @@ private:
 
     zmq::context_t& context;
     zmq::socket_t socket;
+
+    std::unordered_map<std::string, std::pair<std::thread, bool>> subscribes;
+    const std::string subKey = "subscribe";
 };
 using SubscriberInst = Subscriber*;
 
