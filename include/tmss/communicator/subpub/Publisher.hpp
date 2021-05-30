@@ -7,7 +7,7 @@ namespace communicator {
 
 class Publisher {
 public:
-    void FanOut(const std::string& envelope, const std::string& content)
+    void Publish(const std::string& envelope, const std::string& content)
     {
         // envelope value must be a pure string.
         socket.send(zmq::buffer(envelope), zmq::send_flags::sndmore);
