@@ -6,4 +6,4 @@
 #include "tmss/StatusSyncPrimary.hpp"
 #include "tmss/StatusSyncSecondary.hpp"
 
-#include "tmss/TiMultiServerSupportImpl.inl"
+#include "tmss/TiMultiServerSupport.inl"

@@ -1,4 +1,4 @@
-#ifdef TI_MSS_IMPL
+#ifdef TI_RPC_IMPL
 // From tmss/MultiServerSupportBase.hpp
 ti::communicator::Communicator ti::MultiServerSupportBase::communicator;
 // From tmss/StatusSyncDataSet.hpp
