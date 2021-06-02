@@ -52,7 +52,7 @@ public:
             std::string serialized;
             serializer.Serialize(serialized, *data.networkCounter, data.HashCode(), data);
             if (!Communicator().IsInstInvalid(publisher)) {
-                publisher->FanOut(data.category, serialized);
+                publisher->Publish(data.category, serialized);
             }
             (*data.networkCounter)++;
             serializer.Serialize(serialized, data.HashCode(), data);

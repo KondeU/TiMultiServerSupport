@@ -38,6 +38,18 @@ public:
         {
             SubscribeProcess(envelope, content);
         };
+        procSubCb = // NB: Caution that the life cycle of procSubCb!
+        [this](bool receivedSuccess)
+        {
+            if (receivedSuccess) {
+                receiveTimeoutCounter = 0;
+            } else {
+                receiveTimeoutCounter++;
+                if (receiveTimeoutCounter > HeartbeatThreshold) {
+                    // TODO: Ping-Pong test.
+                }
+            }
+        };
     }
 
     bool Start(Role node, const std::string& ip,
@@ -49,6 +61,8 @@ public:
         if (node == Role::None) {
             return false;
         }
+
+        receiveTimeoutCounter = 0;
 
         role = node;
         addrReqRep = ip + ":" + std::to_string(callfunc);
@@ -208,7 +222,13 @@ protected:
     }
 
 private:
-    static constexpr int RpcTimeout = 100; // 100ms
+    static constexpr int RpcTimeout = 10; // 10ms
+    // If the threshold is reached and never package
+    // has been received, then request a ping-pong test.
+    static constexpr int ReceiveTimeout = 10;      // 10ms
+    static constexpr int HeartbeatThreshold = 100; // 10ms * 100 = 1s
+
+    int receiveTimeoutCounter = 0;
 
     std::unordered_map<std::string, // function name
         std::function<void(const std::string&)>> rpcs;
@@ -226,6 +246,8 @@ private:
     std::function<void(const std::string&, std::string&)> procRep;
     // params: envelope, content, process for subscriber [Client]
     std::function<void(const std::string&, const std::string&)> procSub;
+    // params: received successfully or not, process for subscriber callback.
+    std::function<void(bool)> procSubCb;              // [Client]
 
     Role role = Role::None;
     std::string addrReqRep;

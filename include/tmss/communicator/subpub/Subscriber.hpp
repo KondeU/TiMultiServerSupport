@@ -23,7 +23,7 @@ public:
         socket.set(zmq::sockopt::unsubscribe, envelope);
     }
 
-    bool StartReceive(const std::function<void(bool)>& callback, // isReceiveTimeout
+    bool StartReceive(const std::function<void(bool)>& callback, // bool: receive successfully?
         const std::function<void(const std::string&, const std::string&)>& process)
     {
         if (subscribes.find(subKey) != subscribes.end()) {
@@ -41,7 +41,7 @@ public:
                 std::vector<zmq::message_t> messages;
                 (void)zmq::recv_multipart(socket, std::back_inserter(messages));
                 if (messages.size() != 2) { // envelope + content
-                    callback(true); // true means receive timeout!
+                    callback(false); // false means receive timeout!
                 } else {
                     std::string envelope;
                     std::string content;
@@ -51,7 +51,7 @@ public:
                     content = content.replace(content.begin(), content.end(),
                         static_cast<char*>(messages[1].data()), messages[1].size());
                     process(envelope, content);
-                    callback(false);
+                    callback(true);
                 }
             }
         }), true));

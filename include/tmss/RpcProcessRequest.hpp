@@ -117,7 +117,7 @@ protected:
     }
 
 private:
-    static constexpr int RpcTimeout = 3000;
+    static constexpr int RpcTimeout = 10; // 10ms
 
     serializer::FunctionSerializer serializer;
     communicator::RequesterInst requester;
