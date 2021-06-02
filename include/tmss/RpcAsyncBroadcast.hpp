@@ -45,9 +45,9 @@ public:
                 receiveTimeoutCounter = 0;
             } else {
                 receiveTimeoutCounter++;
-                if (receiveTimeoutCounter > HeartbeatThreshold) {
-                    // TODO: Ping-Pong test.
-                }
+            }
+            if (receiveTimeoutCountCallback) {
+                receiveTimeoutCountCallback(receiveTimeoutCounter);
             }
         };
     }
@@ -78,12 +78,18 @@ public:
 
         case Role::Server:
             // TODO
-            break;
+            // !!----- FALL THROUGH -----!!
+            // The server is also a client!
+            #if ((__cplusplus >= 201703L) ||\
+                (defined(_MSVC_LANG) && _MSVC_LANG >= 201703L))
+            [[fallthrough]];
+            #endif
 
         case Role::Client:
             // TODO
             break;
         }
+        return true;
     }
 
     bool Stop()
@@ -92,11 +98,56 @@ public:
             return false;
         }
 
-        // TODO
+        bool success = true;
+        if (!responder->StopResponse() ||
+            !responder->WaitResponse() ||
+            !responder->ResetResponse()) {
+            success = false;
+        }
+        if (!subscriber->StopReceive() ||
+            !subscriber->WaitReceive() ||
+            !subscriber->ResetReceive()) {
+            success = false;
+        }
+        if (success == false) {
+            return false;
+        }
+
+        if (!Communicator().IsInstInvalid(responder)) {
+            Communicator().DestroyInstance(
+                Communicator().MakeInstValue(responder));
+            Communicator().ResetInstInvalid(responder);
+        }
+        if (!Communicator().IsInstInvalid(requester)) {
+            Communicator().DestroyInstance(
+                Communicator().MakeInstValue(requester));
+            Communicator().ResetInstInvalid(requester);
+        }
+        if (!Communicator().IsInstInvalid(publisher)) {
+            Communicator().DestroyInstance(
+                Communicator().MakeInstValue(publisher));
+            Communicator().ResetInstInvalid(publisher);
+        }
+        if (!Communicator().IsInstInvalid(subscriber)) {
+            Communicator().DestroyInstance(
+                Communicator().MakeInstValue(subscriber));
+            Communicator().ResetInstInvalid(subscriber);
+        }
 
         role = Role::None;
         addrReqRep = "";
         addrPubSub = "";
+        return true;
+    }
+
+    void RegistReceiveTimeoutCallback(std::function<void(int)> cb)
+    {
+        receiveTimeoutCountCallback = cb;
+    }
+
+    void UnregistReceiveTimeoutCallback()
+    {
+        receiveTimeoutCountCallback = std::function<void(int)>();
     }
 
     template <typename Func>
@@ -127,6 +178,17 @@ public:
         case communicator::CommunicationCode::Success:
             break; // Success means the network communication is normal.
         case communicator::CommunicationCode::ReceiveTimeout:
+            // Network timeout and disconnect network:
+            Communicator().DestroyInstance(
+                Communicator().MakeInstValue(requester));
+            Communicator().ResetInstInvalid(requester);
+            // Network timeout and reconnect network:
+            requester = Communicator().CreateRequester(addrReqRep);
+            requester->SetTimeout(RpcTimeout);
+            // NB: Here we did not do very detailed verification as
+            //     in the Stop and Start functions. We assumed that
+            //     there would be no problems in this short time...
+            // Finally return NetworkTimeout to notify the caller.
             return CallError::NetworkTimeout;
         }
 
@@ -222,13 +284,10 @@ protected:
     }
 
 private:
-    static constexpr int RpcTimeout = 10; // 10ms
-    // If the threshold is reached and never package
-    // has been received, then request a ping-pong test.
-    static constexpr int ReceiveTimeout = 10;      // 10ms
-    static constexpr int HeartbeatThreshold = 100; // 10ms * 100 = 1s
+    static constexpr int RpcTimeout = 10; // 10ms (Request and Subscribe)
 
-    int receiveTimeoutCounter = 0;
+    int receiveTimeoutCounter = 0; // subscriber receive timeout [Client]
+    std::function<void(int)> receiveTimeoutCountCallback;     // [Client]
 
     std::unordered_map<std::string, // function name
         std::function<void(const std::string&)>> rpcs;
