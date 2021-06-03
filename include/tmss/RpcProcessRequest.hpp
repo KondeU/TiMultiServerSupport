@@ -19,8 +19,8 @@ public:
             return false;
         }
 
-        requester = Communicator().CreateRequester(
-            serverIp + ":" + std::to_string(serverPort));
+        std::string addr = serverIp + ":" + std::to_string(serverPort);
+        requester = Communicator().CreateRequester(addr);
         if (Communicator().IsInstInvalid(requester)) {
             return false;
         }
@@ -31,6 +31,7 @@ public:
             return false;
         }
 
+        serverAddress = addr; // Save the address for use when reconnecting.
         return true;
     }
 
@@ -46,21 +47,17 @@ public:
         return true;
     }
 
-    enum class CallError {
-        Success,
-        Unknown,
-        // If the error type is Network, disconnect network
-        // and then connect network again to reset.
-        NetworkTimeout,
-        // If the error type is Function, check the function
-        // name and function binding(RpcProcessResponse::BindFunc).
-        FunctionNotFound,
-        FunctionNameMismatch
-    };
+    void SetAutoReconnectNetwork(bool enable)
+    {
+        // Reconnect network automatically when
+        // network timeout if enable is true.
+        // See CallFunc in detail.
+        autoReconnectNetwork = enable;
+    }
 
     template <typename T>
     struct CallReturn {
-        CallError error;
+        rpc::RpcCallError error;
         typename rpc::RpcReturnType<T>::Type value;
     };
 
@@ -74,9 +71,22 @@ public:
         serializer.Serialize(request, name, wrapper);
 
         std::string respond;
-        CallError error = CallRemote(request, respond);
-        // Filtering error, only Unknown needs to be parsed, see CallRemote.
-        if (error == CallError::NetworkTimeout) {
+        rpc::RpcCallError error = CallRemote(request, respond);
+        // Filtering error, only Success needs to be parsed
+        // for further confirmation, see CallRemote.
+        if (error == rpc::RpcCallError::NetworkTimeout) {
+            // Reconnect network automatically when network timeout.
+            if (autoReconnectNetwork) {
+                // NB: Here we did not do very detailed verification
+                //     as in the ConnectNetwork and DisconnectNetwork
+                //     functions. We assumed that there would be no
+                //     problems in this short time.
+                Communicator().DestroyInstance(
+                    Communicator().MakeInstValue(requester));
+                Communicator().ResetInstInvalid(requester);
+                requester = Communicator().CreateRequester(addr);
+                requester->SetTimeout(RpcTimeout);
+            }
             return { error, {} };
         }
 
@@ -85,12 +95,12 @@ public:
         serializer.Deserialize(respond, retFuncName, retWrapVoid);
         // Function name mismatch, may be out-of-order calls occurred.
         if (retFuncName != name) {
-            return { CallError::FunctionNameMismatch, {} };
+            return { rpc::RpcCallError::FunctionNameMismatch, {} };
         }
         // Filtering error, only rpc::RpcReturnCode::Success needs to be parsed.
         if (std::get<rpc::RpcReturnCode>(retWrapVoid)
             == rpc::RpcReturnCode::FunctionNotFound) {
-            return { CallError::FunctionNotFound, {} };
+            return { rpc::RpcCallError::FunctionNotFound, {} };
         }
 
         CallReturn<Retv> ret{ CallError::Success, {} };
@@ -104,20 +114,24 @@ public:
     }
 
 protected:
-    inline CallError CallRemote(const std::string& request, std::string& respond)
+    inline rpc::RpcCallError CallRemote(
+        const std::string& request, std::string& respond)
     {
         switch (requester->Request(request, respond)) {
         case communicator::CommunicationCode::Success:
-            return CallError::Unknown;
+            return rpc::RpcCallError::Success; // Only successfully received.
         case communicator::CommunicationCode::ReceiveTimeout:
-            return CallError::NetworkTimeout;
+            return rpc::RpcCallError::NetworkTimeout;
         }
         // It is not possible to run here. Only used to avoid compilation warning.
-        return CallError::NetworkTimeout;
+        return rpc::RpcCallError::NetworkTimeout;
     }
 
 private:
     static constexpr int RpcTimeout = 10; // 10ms
+
+    bool autoReconnectNetwork = true;
+    std::string serverAddress;
 
     serializer::FunctionSerializer serializer;
     communicator::RequesterInst requester;

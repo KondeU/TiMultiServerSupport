@@ -6,6 +6,13 @@
 namespace ti {
 namespace rpc {
 
+enum class RpcCallError {
+    Success,
+    NetworkTimeout,
+    FunctionNotFound,
+    FunctionNameMismatch
+};
+
 enum class RpcReturnCode : uint8_t {
     Success,
     FunctionNotFound
