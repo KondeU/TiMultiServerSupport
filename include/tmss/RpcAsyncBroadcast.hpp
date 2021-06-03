@@ -14,13 +14,6 @@ public:
         Client
     };
 
-    enum class CallError {
-        Success,
-        NetworkTimeout,
-        FunctionNotFound,
-        FunctionNameMismatch
-    };
-
     RpcAsyncBroadcast()
     {
         Communicator().ResetInstInvalid(responder);
@@ -140,9 +133,9 @@ public:
         return true;
     }
 
-    void RegistReceiveTimeoutCallback(std::function<void(int)> cb)
+    void RegistReceiveTimeoutCallback(std::function<void(int)> callback)
     {
-        receiveTimeoutCountCallback = cb;
+        receiveTimeoutCountCallback = callback;
     }
 
     void UnregistReceiveTimeoutCallback()
@@ -165,7 +158,7 @@ public:
     }
 
     template <typename ...Args>
-    CallError CallFunc(const std::string& name, const Args& ...args)
+    rpc::RpcCallError CallFunc(const std::string& name, const Args& ...args)
     {
         rpc::RpcFuncArgsWrapper<typename std::decay<Args>::type...>
             wrapper = std::make_tuple(args...);
@@ -189,7 +182,7 @@ public:
             //     in the Stop and Start functions. We assumed that
             //     there would be no problems in this short time...
             // Finally return NetworkTimeout to notify the caller.
-            return CallError::NetworkTimeout;
+            return rpc::RpcCallError::NetworkTimeout;
         }
 
         std::string retFuncName;
@@ -197,10 +190,20 @@ public:
         serializer.Deserialize(respond, retFuncName, retReturnCode);
         // Function name mismatch, may be out-of-order calls occurred.
         if (retFuncName != name) {
-            return CallError::FunctionNameMismatch;
+            return rpc::RpcCallError::FunctionNameMismatch;
         }
         // Only Success or FunctionNotFound is depend by the server execute.
-        return retReturnCode;
+        switch (retReturnCode) {
+        case rpc::RpcReturnCode::Success:
+            return rpc::RpcCallError::Success;
+        case rpc::RpcReturnCode::FunctionNotFound:
+            return rpc::RpcCallError::FunctionNotFound;
+        }
+        // It is not possible to run here.
+        // Only used to avoid compilation warning.
+        // retReturnCode type is rpc::RpcReturnCode, and
+        // rpc::RpcReturnCode only has Success and FunctionNotFound.
+        return rpc::RpcCallError::FunctionNotFound;
     }
 
 protected:
