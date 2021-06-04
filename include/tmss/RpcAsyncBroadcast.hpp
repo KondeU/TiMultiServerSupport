@@ -21,7 +21,7 @@ public:
         Communicator().ResetInstInvalid(publisher);
         Communicator().ResetInstInvalid(subscriber);
 
-        procRep = // NB: Caution that the life cycle of procRep!
+        procResp = // NB: Caution that the life cycle of procResp!
         [this](const std::string& request, std::string& respond)
         {
             ResponseProcess(request, respond);
@@ -61,6 +61,7 @@ public:
         addrReqRep = ip + ":" + std::to_string(callfunc);
         addrPubSub = ip + ":" + std::to_string(broadcast);
 
+        bool success = true;
         switch (node) {
         default:
         case Role::None:
@@ -70,7 +71,18 @@ public:
             return false;
 
         case Role::Server:
-            // TODO
+            publisher = Communicator().CreatePublisher(addrPubSub);
+            if (Communicator().IsInstInvalid(publisher)) {
+                success = false;
+            }
+            responder = Communicator().CreateResponder(addrReqRep);
+            if (Communicator().IsInstInvalid(responder)) {
+                success = false;
+            } else {
+                if (!responder->StartResponse(procResp)) {
+                    success = false;
+                }
+            }
             // !!----- FALL THROUGH -----!!
             // The server is also a client!
             #if ((__cplusplus >= 201703L) ||\
@@ -79,10 +91,31 @@ public:
             #endif
 
         case Role::Client:
-            // TODO
+            subscriber = Communicator().CreateSubscriber(addrPubSub);
+            if (Communicator().IsInstInvalid(requester)) {
+                success = false;
+            } else {
+                int timeout = subscriber->SetTimeout(RpcTimeout);
+                if (timeout != RpcTimeout) {
+                    success = false;
+                }
+                subscriber->Subscribe("");
+                if (!subscriber->StartReceive(procSubCb, procSub)) {
+                    success = false;
+                }
+            }
+            requester = Communicator().CreateRequester(addrReqRep);
+            if (Communicator().IsInstInvalid(requester)) {
+                success = false;
+            } else {
+                int timeout = requester->SetTimeout(RpcTimeout);
+                if (timeout != RpcTimeout) {
+                    success = false;
+                }
+            }
             break;
         }
-        return true;
+        return success;
     }
 
     bool Stop()
@@ -101,9 +134,6 @@ public:
             !subscriber->WaitReceive() ||
             !subscriber->ResetReceive()) {
             success = false;
-        }
-        if (success == false) {
-            return false;
         }
 
         if (!Communicator().IsInstInvalid(responder)) {
@@ -130,7 +160,7 @@ public:
         role = Role::None;
         addrReqRep = "";
         addrPubSub = "";
-        return true;
+        return success;
     }
 
     void RegistReceiveTimeoutCallback(std::function<void(int)> callback)
@@ -305,7 +335,7 @@ private:
     communicator::SubscriberInst subscriber; // [Client]
 
     // params: request, response, process for responder  [Server]
-    std::function<void(const std::string&, std::string&)> procRep;
+    std::function<void(const std::string&, std::string&)> procResp;
     // params: envelope, content, process for subscriber [Client]
     std::function<void(const std::string&, const std::string&)> procSub;
     // params: received successfully or not, process for subscriber callback.
