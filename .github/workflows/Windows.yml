@@ -16,5 +16,5 @@ jobs:
     - name: Publish
       uses: actions/upload-artifact@v2
       with:
-        name: TiMultiServerSupport
-        path: ${{github.workspace}}\build\archive
+        name: TiRPC
+        path: ${{github.workspace}}\artifact

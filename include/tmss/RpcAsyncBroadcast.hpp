@@ -14,13 +14,6 @@ public:
         Client
     };
 
-    enum class CallError {
-        Success,
-        NetworkTimeout,
-        FunctionNotFound,
-        FunctionNameMismatch
-    };
-
     RpcAsyncBroadcast()
     {
         Communicator().ResetInstInvalid(responder);
@@ -28,7 +21,7 @@ public:
         Communicator().ResetInstInvalid(publisher);
         Communicator().ResetInstInvalid(subscriber);
 
-        procRep = // NB: Caution that the life cycle of procRep!
+        procResp = // NB: Caution that the life cycle of procResp!
         [this](const std::string& request, std::string& respond)
         {
             ResponseProcess(request, respond);
@@ -37,6 +30,18 @@ public:
         [this](const std::string& envelope, const std::string& content)
         {
             SubscribeProcess(envelope, content);
+        };
+        procSubCb = // NB: Caution that the life cycle of procSubCb!
+        [this](bool receivedSuccess)
+        {
+            if (receivedSuccess) {
+                receiveTimeoutCounter = 0;
+            } else {
+                receiveTimeoutCounter++;
+            }
+            if (receiveTimeoutCountCallback) {
+                receiveTimeoutCountCallback(receiveTimeoutCounter);
+            }
         };
     }
 
@@ -50,10 +55,13 @@ public:
             return false;
         }
 
+        receiveTimeoutCounter = 0;
+
         role = node;
         addrReqRep = ip + ":" + std::to_string(callfunc);
         addrPubSub = ip + ":" + std::to_string(broadcast);
 
+        bool success = true;
         switch (node) {
         default:
         case Role::None:
@@ -63,13 +71,51 @@ public:
             return false;
 
         case Role::Server:
-            // TODO
-            break;
+            publisher = Communicator().CreatePublisher(addrPubSub);
+            if (Communicator().IsInstInvalid(publisher)) {
+                success = false;
+            }
+            responder = Communicator().CreateResponder(addrReqRep);
+            if (Communicator().IsInstInvalid(responder)) {
+                success = false;
+            } else {
+                if (!responder->StartResponse(procResp)) {
+                    success = false;
+                }
+            }
+            // !!----- FALL THROUGH -----!!
+            // The server is also a client!
+            #if ((__cplusplus >= 201703L) ||\
+                (defined(_MSVC_LANG) && _MSVC_LANG >= 201703L))
+            [[fallthrough]];
+            #endif
 
         case Role::Client:
-            // TODO
+            subscriber = Communicator().CreateSubscriber(addrPubSub);
+            if (Communicator().IsInstInvalid(requester)) {
+                success = false;
+            } else {
+                int timeout = subscriber->SetTimeout(RpcTimeout);
+                if (timeout != RpcTimeout) {
+                    success = false;
+                }
+                subscriber->Subscribe("");
+                if (!subscriber->StartReceive(procSubCb, procSub)) {
+                    success = false;
+                }
+            }
+            requester = Communicator().CreateRequester(addrReqRep);
+            if (Communicator().IsInstInvalid(requester)) {
+                success = false;
+            } else {
+                int timeout = requester->SetTimeout(RpcTimeout);
+                if (timeout != RpcTimeout) {
+                    success = false;
+                }
+            }
             break;
         }
+        return success;
     }
 
     bool Stop()
@@ -78,11 +124,53 @@ public:
             return false;
         }
 
-        // TODO
+        bool success = true;
+        if (!responder->StopResponse() ||
+            !responder->WaitResponse() ||
+            !responder->ResetResponse()) {
+            success = false;
+        }
+        if (!subscriber->StopReceive() ||
+            !subscriber->WaitReceive() ||
+            !subscriber->ResetReceive()) {
+            success = false;
+        }
+
+        if (!Communicator().IsInstInvalid(responder)) {
+            Communicator().DestroyInstance(
+                Communicator().MakeInstValue(responder));
+            Communicator().ResetInstInvalid(responder);
+        }
+        if (!Communicator().IsInstInvalid(requester)) {
+            Communicator().DestroyInstance(
+                Communicator().MakeInstValue(requester));
+            Communicator().ResetInstInvalid(requester);
+        }
+        if (!Communicator().IsInstInvalid(publisher)) {
+            Communicator().DestroyInstance(
+                Communicator().MakeInstValue(publisher));
+            Communicator().ResetInstInvalid(publisher);
+        }
+        if (!Communicator().IsInstInvalid(subscriber)) {
+            Communicator().DestroyInstance(
+                Communicator().MakeInstValue(subscriber));
+            Communicator().ResetInstInvalid(subscriber);
+        }
 
         role = Role::None;
         addrReqRep = "";
         addrPubSub = "";
+        return success;
+    }
+
+    void RegistReceiveTimeoutCallback(std::function<void(int)> callback)
+    {
+        receiveTimeoutCountCallback = callback;
+    }
+
+    void UnregistReceiveTimeoutCallback()
+    {
+        receiveTimeoutCountCallback = std::function<void(int)>();
     }
 
     template <typename Func>
@@ -100,7 +188,7 @@ public:
     }
 
     template <typename ...Args>
-    CallError CallFunc(const std::string& name, const Args& ...args)
+    rpc::RpcCallError CallFunc(const std::string& name, const Args& ...args)
     {
         rpc::RpcFuncArgsWrapper<typename std::decay<Args>::type...>
             wrapper = std::make_tuple(args...);
@@ -113,7 +201,18 @@ public:
         case communicator::CommunicationCode::Success:
             break; // Success means the network communication is normal.
         case communicator::CommunicationCode::ReceiveTimeout:
-            return CallError::NetworkTimeout;
+            // Network timeout and disconnect network:
+            Communicator().DestroyInstance(
+                Communicator().MakeInstValue(requester));
+            Communicator().ResetInstInvalid(requester);
+            // Network timeout and reconnect network:
+            requester = Communicator().CreateRequester(addrReqRep);
+            requester->SetTimeout(RpcTimeout);
+            // NB: Here we did not do very detailed verification as
+            //     in the Stop and Start functions. We assumed that
+            //     there would be no problems in this short time...
+            // Finally return NetworkTimeout to notify the caller.
+            return rpc::RpcCallError::NetworkTimeout;
         }
 
         std::string retFuncName;
@@ -121,10 +220,20 @@ public:
         serializer.Deserialize(respond, retFuncName, retReturnCode);
         // Function name mismatch, may be out-of-order calls occurred.
         if (retFuncName != name) {
-            return CallError::FunctionNameMismatch;
+            return rpc::RpcCallError::FunctionNameMismatch;
         }
         // Only Success or FunctionNotFound is depend by the server execute.
-        return retReturnCode;
+        switch (retReturnCode) {
+        case rpc::RpcReturnCode::Success:
+            return rpc::RpcCallError::Success;
+        case rpc::RpcReturnCode::FunctionNotFound:
+            return rpc::RpcCallError::FunctionNotFound;
+        }
+        // It is not possible to run here.
+        // Only used to avoid compilation warning.
+        // retReturnCode type is rpc::RpcReturnCode, and
+        // rpc::RpcReturnCode only has Success and FunctionNotFound.
+        return rpc::RpcCallError::FunctionNotFound;
     }
 
 protected:
@@ -208,7 +317,10 @@ protected:
     }
 
 private:
-    static constexpr int RpcTimeout = 100; // 100ms
+    static constexpr int RpcTimeout = 10; // 10ms (Request and Subscribe)
+
+    int receiveTimeoutCounter = 0; // subscriber receive timeout [Client]
+    std::function<void(int)> receiveTimeoutCountCallback;     // [Client]
 
     std::unordered_map<std::string, // function name
         std::function<void(const std::string&)>> rpcs;
@@ -223,9 +335,11 @@ private:
     communicator::SubscriberInst subscriber; // [Client]
 
     // params: request, response, process for responder  [Server]
-    std::function<void(const std::string&, std::string&)> procRep;
+    std::function<void(const std::string&, std::string&)> procResp;
     // params: envelope, content, process for subscriber [Client]
     std::function<void(const std::string&, const std::string&)> procSub;
+    // params: received successfully or not, process for subscriber callback.
+    std::function<void(bool)> procSubCb;              // [Client]
 
     Role role = Role::None;
     std::string addrReqRep;

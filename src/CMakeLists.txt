@@ -18,5 +18,3 @@ file(GLOB_RECURSE INC ../include/*)
 
 add_executable(TestRPC_Client TestRPC_Client.cpp ${INC})
 add_executable(TestRPC_Server TestRPC_Server.cpp ${INC})
-add_executable(TestStatusSync_Client TestStatusSync_Client.cpp ${INC})
-add_executable(TestStatusSync_Server TestStatusSync_Server.cpp ${INC})
