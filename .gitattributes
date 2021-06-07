@@ -2,5 +2,4 @@
 * text=auto
 
 # Ignore the third-party code language
-* linguist-vendored
-3rd/** linguist-vendored=false
+3rd/** linguist-vendored
