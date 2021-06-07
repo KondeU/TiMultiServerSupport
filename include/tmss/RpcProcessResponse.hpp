@@ -165,6 +165,9 @@ protected:
     decltype(auto) CallInvokeImpl(Func&& func, ArgsTuple&& argsTuple,
         std::index_sequence<Index...>)
     {
+        (void)argsTuple; // Avoid the compilation warning
+        // that `the variable has been defined but not used`
+        // if the number of parameters of the function is 0.
         return func(std::get<Index>(std::forward<ArgsTuple>(argsTuple))...);
     }
 
