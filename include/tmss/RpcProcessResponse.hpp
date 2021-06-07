@@ -67,7 +67,7 @@ public:
     inline void BindFunc(const std::string& name, CFunc func, CType& impl)
     {
         rpcs[name] = std::bind(&RpcProcessResponse::CallProxy<CFunc, CType>, this,
-            func, impl, std::placeholders::_1, std::placeholders::_2);
+            func, &impl, std::placeholders::_1, std::placeholders::_2);
     }
 
 protected:
@@ -95,7 +95,7 @@ protected:
     }
 
     template <typename CFunc, typename CType>
-    inline void CallProxy(CFunc func, CType& impl,
+    inline void CallProxy(CFunc func, CType* impl,
         const std::string& request, std::string& respond)
     {
         CallProxyImpl(func, impl, request, respond);
@@ -109,11 +109,11 @@ protected:
     }
 
     template <typename R, typename C, class ...Params>
-    void CallProxyImpl(R(C::*func)(Params...), C& impl,
+    void CallProxyImpl(R(C::*func)(Params...), C* impl,
         const std::string& request, std::string& respond)
     {
         auto proxy = [&func, &impl](Params ...params)->R {
-            return (impl.*func)(params...);
+            return (impl->*func)(params...);
         };
         CallProxyImpl(std::function<R(Params...)>(proxy), request, respond);
     }
