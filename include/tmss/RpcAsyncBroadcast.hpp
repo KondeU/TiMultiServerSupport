@@ -317,7 +317,7 @@ protected:
     }
 
 private:
-    static constexpr int RpcTimeout = 10; // 10ms (Request and Subscribe)
+    static constexpr int RpcTimeout = 1000; // 1s (Request and Subscribe)
 
     int receiveTimeoutCounter = 0; // subscriber receive timeout [Client]
     std::function<void(int)> receiveTimeoutCountCallback;     // [Client]
