@@ -48,13 +48,13 @@ std::vector<double> TestFunc3(std::vector<double> v1,
 struct CustomStruct {
     int a, b;
     double c;
-
     template <class Archive>
-    void serialize(Archive & archive)
+    void serialize(Archive& archive)
     {
         archive(a, b, c);
     }
 };
+
 CustomStruct TestFunc4(const CustomStruct& v)
 {
     PrintInfo("CALL: CustomStruct TestFunc4(CustomStruct) +params " +
@@ -106,7 +106,8 @@ public:
 
     static int TestFunc6(int i)
     {
-        PrintInfo("CALL: static int TestClass::TestFunc6(int)");
+        PrintInfo("CALL: static int TestClass::TestFunc6(int) +params "
+            + std::to_string(i));
         return i;
     }
 
@@ -122,7 +123,7 @@ public:
 
     int TestFunc10(int i) override
     {
-        PrintInfo("CALL: override(virtual=0) int TestClass::TestFunc10(int)"
+        PrintInfo("CALL: override(virtual=0) int TestClass::TestFunc10(int) +params "
             + std::to_string(i));
         return i;
     }
@@ -159,50 +160,50 @@ int main(int argc, char* argv[])
     ti::RpcProcessResponse responder;
 
     PrintInfo("BindFunc: General function.");
-    responder.BindFunc("TestFunc1", &TestFunc1);
+    responder.BindFunc("TestFunc1", &TestFunc1); //1//
 
     PrintInfo("BindFunc: General function with the same function name.");
-    responder.BindFunc<void()>("TestFunc2@a", &TestFunc2);
-    responder.BindFunc<int(int)>("TestFunc2@b", &TestFunc2);
+    responder.BindFunc<void()>("TestFunc2@a", &TestFunc2); //2//
+    responder.BindFunc<int(int)>("TestFunc2@b", &TestFunc2); //3//
 
     PrintInfo("BindFunc: General function with the STL.");
-    responder.BindFunc("TestFunc3", &TestFunc3);
+    responder.BindFunc("TestFunc3", &TestFunc3); //4//
 
     PrintInfo("BindFunc: General function with the custom struct.");
-    responder.BindFunc("TestFunc4", &TestFunc4);
+    responder.BindFunc("TestFunc4", &TestFunc4); //5//
 
     PrintInfo("BindFunc: Class static function.");
-    responder.BindFunc("TestClassBase::TestFunc5", &TestClassBase::TestFunc5);
+    responder.BindFunc("TestClassBase::TestFunc5", &TestClassBase::TestFunc5); //6//
 
     PrintInfo("BindFunc: Class static function with the same function name.");
-    responder.BindFunc<void()>("TestClass::TestFunc6@a", &TestClass::TestFunc6);
-    responder.BindFunc<int(int)>("TestClass::TestFunc6@b", &TestClass::TestFunc6);
+    responder.BindFunc<void()>("TestClass::TestFunc6@a", &TestClass::TestFunc6); //7//
+    responder.BindFunc<int(int)>("TestClass::TestFunc6@b", &TestClass::TestFunc6); //8//
 
     PrintInfo("BindFunc: Class function.");
     responder.BindFunc("TestClassBase::TestFunc7",
-        &TestClassBase::TestFunc7, testClassBase);
+        &TestClassBase::TestFunc7, testClassBase); //9//
 
     PrintInfo("BindFunc: Class function with the same function name.");
     responder.BindFunc<void(TestClass::*)()>("TestClass::TestFunc8@a",
-        &TestClass::TestFunc8, testClass);
+        &TestClass::TestFunc8, testClass); //10//
     responder.BindFunc<int(TestClass::*)(int)>("TestClass::TestFunc8@b",
-        &TestClass::TestFunc8, testClass);
+        &TestClass::TestFunc8, testClass); //11//
 
     PrintInfo("BindFunc: Class virtual function, Base class or Sub class.");
     responder.BindFunc("TestClassBase::TestFunc9",
-        &TestClassBase::TestFunc9, testClassBase); // void(TestClassBase::*)()
+        &TestClassBase::TestFunc9, testClassBase); //12// void(TestClassBase::*)()
     responder.BindFunc("TestClass::TestFunc9",
-        &TestClass::TestFunc9, testClass); // void(TestClass::*)()
+        &TestClass::TestFunc9, testClass); //13// void(TestClass::*)()
 
     PrintInfo("BindFunc: Class virtual function with the same function name.");
     responder.BindFunc<void(TestClassBase::*)()>("TestClass::TestFunc10@a",
-        &TestClassBase::TestFunc10, testClassBase); // from testClassBase
+        &TestClassBase::TestFunc10, testClassBase); //14// from testClassBase
     responder.BindFunc<int(TestClass::*)(int)>("TestClass::TestFunc10@b",
-        &TestClass::TestFunc10, testClass); // from testClass
+        &TestClass::TestFunc10, testClass); //15// from testClass
 
     PrintInfo("BindFunc: Lambda.");
     responder.BindFunc("Lambda",
-        std::function<void()>([]() { PrintInfo("CALL: Lambda"); }));
+        std::function<void()>([]() { PrintInfo("CALL: Lambda"); })); //16//
 
     PrintInfo("Bind function finished.");
 
