@@ -184,7 +184,7 @@ public:
     inline void BindFunc(const std::string& name, CFunc func, CType& impl)
     {
         rpcs[name] = std::bind(&RpcAsyncBroadcast::CallProxy<CFunc, CType>,
-            this, func, impl, std::placeholders::_1);
+            this, func, &impl, std::placeholders::_1);
     }
 
     template <typename ...Args>
@@ -270,7 +270,7 @@ protected:
     }
 
     template <typename CFunc, typename CType>
-    inline void CallProxy(CFunc func, CType& impl, const std::string& data)
+    inline void CallProxy(CFunc func, CType* impl, const std::string& data)
     {
         CallProxyImpl(func, impl, data);
     }
@@ -282,10 +282,10 @@ protected:
     }
 
     template <typename CImpl, class ...Args>
-    void CallProxyImpl(void(CImpl::*func)(Args...), CImpl& impl, const std::string& data)
+    void CallProxyImpl(void(CImpl::*func)(Args...), CImpl* impl, const std::string& data)
     {
         auto proxy = [&func, &impl](Args ...args) {
-            (impl.*func)(args...);
+            (impl->*func)(args...);
         };
         CallProxyImpl(std::function<void(Args...)>(proxy), data);
     }
@@ -317,7 +317,7 @@ protected:
     }
 
 private:
-    static constexpr int RpcTimeout = 10; // 10ms (Request and Subscribe)
+    static constexpr int RpcTimeout = 1000; // 1s (Request and Subscribe)
 
     int receiveTimeoutCounter = 0; // subscriber receive timeout [Client]
     std::function<void(int)> receiveTimeoutCountCallback;     // [Client]

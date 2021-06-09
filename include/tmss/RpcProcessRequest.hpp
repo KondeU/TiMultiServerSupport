@@ -103,7 +103,7 @@ public:
             return { rpc::RpcCallError::FunctionNotFound, {} };
         }
 
-        CallReturn<Retv> ret{ CallError::Success, {} };
+        CallReturn<Retv> ret{ rpc::RpcCallError::Success, {} };
         if (std::is_same<Retv, void>()) {
             return ret;
         }
@@ -128,7 +128,7 @@ protected:
     }
 
 private:
-    static constexpr int RpcTimeout = 10; // 10ms
+    static constexpr int RpcTimeout = 1000; // 1s
 
     bool autoReconnectNetwork = true;
     std::string serverAddress;
