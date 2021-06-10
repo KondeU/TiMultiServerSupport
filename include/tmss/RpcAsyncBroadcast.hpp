@@ -92,7 +92,7 @@ public:
 
         case Role::Client:
             subscriber = Communicator().CreateSubscriber(addrPubSub);
-            if (Communicator().IsInstInvalid(requester)) {
+            if (Communicator().IsInstInvalid(subscriber)) {
                 success = false;
             } else {
                 int timeout = subscriber->SetTimeout(RpcTimeout);
@@ -125,15 +125,21 @@ public:
         }
 
         bool success = true;
-        if (!responder->StopResponse() ||
-            !responder->WaitResponse() ||
-            !responder->ResetResponse()) {
-            success = false;
+        if (responder) { // [Server]
+            // => Only Server role has it.
+            if (!responder->StopResponse() ||
+                !responder->WaitResponse() ||
+                !responder->ResetResponse()) {
+                success = false;
+            }
         }
-        if (!subscriber->StopReceive() ||
-            !subscriber->WaitReceive() ||
-            !subscriber->ResetReceive()) {
-            success = false;
+        if (subscriber) { // [Client]
+            // => Both Server and Client role have it.
+            if (!subscriber->StopReceive() ||
+                !subscriber->WaitReceive() ||
+                !subscriber->ResetReceive()) {
+                success = false;
+            }
         }
 
         if (!Communicator().IsInstInvalid(responder)) {
@@ -194,7 +200,7 @@ public:
             wrapper = std::make_tuple(args...);
 
         std::string request;
-        serializer.Serialize(request, name, wrapper);
+        fsCfn.Serialize(request, name, wrapper);
 
         std::string respond;
         switch (requester->Request(request, respond)) {
@@ -217,7 +223,7 @@ public:
 
         std::string retFuncName;
         rpc::RpcReturnCode retReturnCode;
-        serializer.Deserialize(respond, retFuncName, retReturnCode);
+        fsCfn.Deserialize(respond, retFuncName, retReturnCode);
         // Function name mismatch, may be out-of-order calls occurred.
         if (retFuncName != name) {
             return rpc::RpcCallError::FunctionNameMismatch;
@@ -295,7 +301,7 @@ protected:
     {
         std::string funcName;
         rpc::RpcFuncArgsWrapper<typename std::decay<Args>::type...> funcArgs;
-        serializer.Deserialize(data, funcName, funcArgs);
+        fsSub.Deserialize(data, funcName, funcArgs);
         CallInvoke(func, funcArgs);
     }
 
@@ -327,6 +333,7 @@ private:
 
     serializer::FunctionSerializer fsRep; // [Server]
     serializer::FunctionSerializer fsSub; // [Client]
+    serializer::FunctionSerializer fsCfn; // [Client]
 
     communicator::ResponderInst  responder;  // [Server]
     communicator::RequesterInst  requester;  // [Client]
