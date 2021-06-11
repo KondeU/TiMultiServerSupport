@@ -10,11 +10,10 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - uses: ilammy/msvc-dev-cmd@v1
-    - name: Build
+    - name: Build "build.bat ci"
       shell: cmd
       run: call "${{github.workspace}}\build.bat" ci
-    - name: Publish
-      uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v2
       with:
         name: TiRPC
         path: ${{github.workspace}}\artifact
