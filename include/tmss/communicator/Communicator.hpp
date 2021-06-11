@@ -72,6 +72,11 @@ public:
         return false;
     }
 
+    virtual ~Communicator()
+    {
+        context.shutdown();
+    }
+
 protected:
     template <typename T>
     using Container = std::unordered_map<InstValue, std::unique_ptr<T>>;

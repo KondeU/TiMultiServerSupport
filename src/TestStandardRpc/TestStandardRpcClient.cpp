@@ -302,6 +302,19 @@ void CallFunc16(ti::RpcProcessRequest& requester)
     PrintInfo("  used: " + std::to_string(usedTime) + " ms");
 }
 
+void CallInvalidFunc(ti::RpcProcessRequest& requester)
+{
+    double usedTime = 0;
+    ti::RpcProcessRequest::CallReturn<float> ret;
+    {
+        LifecycleTimer timer(usedTime);
+        ret = requester.CallFunc<float>("InvalidFunc");
+    }
+    PrintInfo("CallFunc: InvalidFunc");
+    PrintInfo("  retc: " + std::to_string(static_cast<int>(ret.error)));
+    PrintInfo("  used: " + std::to_string(usedTime) + " ms");
+}
+
 int main(int argc, char* argv[])
 {
     signal(SIGINT, SignalHandler);
@@ -313,7 +326,8 @@ int main(int argc, char* argv[])
         CallFunc1,  CallFunc2,  CallFunc3,  CallFunc4,
         CallFunc5,  CallFunc6,  CallFunc7,  CallFunc8,
         CallFunc9,  CallFunc10, CallFunc11, CallFunc12,
-        CallFunc13, CallFunc14, CallFunc15, CallFunc16
+        CallFunc13, CallFunc14, CallFunc15, CallFunc16,
+        CallInvalidFunc
     };
 
     std::string ip = "127.0.0.1";

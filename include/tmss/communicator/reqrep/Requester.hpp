@@ -32,11 +32,6 @@ public:
         return CommunicationCode::Success;
     }
 
-    virtual ~Requester()
-    {
-        socket.close();
-    }
-
 private:
     friend class Communicator;
 
@@ -50,7 +45,18 @@ private:
         // addr: server address string:
         //      x.x.x.x:x means ip:port
         // Requester is Req/Rep model's Client.
-        socket.connect("tcp://" + addr);
+        try {
+            socket.connect("tcp://" + addr);
+        } catch (zmq::error_t) {
+            // IP or port is incorrect.
+            return false;
+        }
+        // Set the buffer of the client to 0 in order to
+        // make sure that messages will not accumulate.
+        socket.set(zmq::sockopt::linger, 0);
+        if (socket.get(zmq::sockopt::linger) != 0) {
+            return false;
+        }
         return true;
     }
 

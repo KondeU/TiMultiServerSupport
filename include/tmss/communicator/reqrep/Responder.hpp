@@ -75,11 +75,6 @@ public:
         return true;
     }
 
-    virtual ~Responder()
-    {
-        socket.close();
-    }
-
 private:
     friend class Communicator;
 
@@ -94,7 +89,13 @@ private:
         //      x.x.x.x:x means ip:port
         //     using *:port to enable all ip
         // Responder is Req/Rep model's Server.
-        socket.bind("tcp://" + addr);
+        try {
+            socket.bind("tcp://" + addr);
+        } catch (zmq::error_t) {
+            // IP or port is incorrect,
+            // or the port is occupied.
+            return false;
+        }
         // Responder blocks and calls recv per second.
         socket.set(zmq::sockopt::rcvtimeo, 1000);
         return true;

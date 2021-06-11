@@ -91,11 +91,6 @@ public:
         return true;
     }
 
-    virtual ~Subscriber()
-    {
-        socket.close();
-    }
-
 private:
     friend class Communicator;
 
@@ -108,7 +103,12 @@ private:
     {
         // addr: server address string:
         //       x.x.x.x:x means ip:port
-        socket.connect("tcp://" + addr);
+        try {
+            socket.connect("tcp://" + addr);
+        } catch (zmq::error_t) {
+            // IP or port is incorrect.
+            return false;
+        }
         return true;
     }
 
