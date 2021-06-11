@@ -91,11 +91,6 @@ public:
         return true;
     }
 
-    virtual ~Subscriber()
-    {
-        socket.close();
-    }
-
 private:
     friend class Communicator;
 

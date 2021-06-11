@@ -75,11 +75,6 @@ public:
         return true;
     }
 
-    virtual ~Responder()
-    {
-        socket.close();
-    }
-
 private:
     friend class Communicator;
 
