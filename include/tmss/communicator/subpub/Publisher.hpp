@@ -26,7 +26,13 @@ private:
     {
         // addr: server address string:
         //       x.x.x.x:x means ip:port
-        socket.bind("tcp://" + addr);
+        try {
+            socket.bind("tcp://" + addr);
+        } catch (zmq::error_t) {
+            // IP or port is incorrect,
+            // or the port is occupied.
+            return false;
+        }
         return true;
     }
 
