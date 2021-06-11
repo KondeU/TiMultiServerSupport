@@ -46,6 +46,12 @@ private:
         //      x.x.x.x:x means ip:port
         // Requester is Req/Rep model's Client.
         socket.connect("tcp://" + addr);
+        // Set the buffer of the client to 0 in order to
+        // make sure that messages will not accumulate.
+        socket.set(zmq::sockopt::linger, 0);
+        if (socket.get(zmq::sockopt::linger) != 0) {
+            return false;
+        }
         return true;
     }
 
