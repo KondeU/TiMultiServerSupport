@@ -1,5 +1,6 @@
 #pragma once
 
+#include <thread>
 #include <zmq_addon.hpp>
 
 namespace tirpc {
