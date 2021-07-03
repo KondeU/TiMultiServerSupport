@@ -4,7 +4,7 @@
 #include <thread>
 #include <zmq.hpp>
 
-namespace ti {
+namespace tirpc {
 namespace communicator {
 
 class Responder {

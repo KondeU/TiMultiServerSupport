@@ -1,6 +1,6 @@
 #pragma once
 
-namespace ti {
+namespace tirpc {
 namespace communicator {
 
 enum class CommunicationCode {

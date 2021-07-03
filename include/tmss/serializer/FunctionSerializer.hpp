@@ -2,7 +2,7 @@
 
 #include "Serializer.hpp"
 
-namespace ti {
+namespace tirpc {
 namespace serializer {
 
 class FunctionSerializer : public Serializer {

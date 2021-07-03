@@ -2,7 +2,7 @@
 
 #include <zmq.hpp>
 
-namespace ti {
+namespace tirpc {
 namespace communicator {
 
 class Publisher {

@@ -3,7 +3,7 @@
 #include <zmq.hpp>
 #include "../CommunicationCode.hpp"
 
-namespace ti {
+namespace tirpc {
 namespace communicator {
 
 class Requester {

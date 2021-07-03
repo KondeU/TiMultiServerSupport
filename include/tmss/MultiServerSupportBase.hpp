@@ -2,7 +2,7 @@
 
 #include "communicator/Communicator.hpp"
 
-namespace ti {
+namespace tirpc {
 
 class MultiServerSupportBase {
 protected:
