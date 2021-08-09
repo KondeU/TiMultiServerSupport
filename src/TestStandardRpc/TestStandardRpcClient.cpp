@@ -1,6 +1,4 @@
 #include <csignal>
-
-#define TI_RPC_IMPL
 #include <TiRPC.hpp>
 namespace ti = tirpc;
 

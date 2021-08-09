@@ -1,18 +1,19 @@
 #pragma once
 
+#include "Singleton.hpp"
 #include "communicator/Communicator.hpp"
 
 namespace tirpc {
 
 class MultiServerSupportBase {
 protected:
-    inline static communicator::Communicator& Communicator()
+    inline communicator::Communicator& Communicator()
     {
-        return communicator;
+        return communicator();
     }
 
 private:
-    static communicator::Communicator communicator;
+    common::Singleton<communicator::Communicator> communicator;
 };
 
 }
