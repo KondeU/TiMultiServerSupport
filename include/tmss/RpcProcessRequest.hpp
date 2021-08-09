@@ -109,7 +109,7 @@ public:
         }
         rpc::RpcReturnWrapper<Retv> retWrapRetv;
         serializer.Deserialize(respond, retFuncName, retWrapRetv);
-        ret.value = std::get<rpc::RpcReturnType<Retv>::Type>(retWrapRetv);
+        ret.value = std::get<typename rpc::RpcReturnType<Retv>::Type>(retWrapRetv);
         return ret;
     }
 

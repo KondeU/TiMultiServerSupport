@@ -130,7 +130,7 @@ protected:
 
         rpc::RpcReturnWrapper<R> funcRetv;
         std::get<rpc::RpcReturnCode>(funcRetv) = rpc::RpcReturnCode::Success;
-        std::get<rpc::RpcReturnType<R>::Type>(funcRetv) = retv;
+        std::get<typename rpc::RpcReturnType<R>::Type>(funcRetv) = retv;
         serializer.Serialize(respond, funcName, funcRetv);
     }
 

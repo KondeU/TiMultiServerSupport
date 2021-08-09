@@ -216,6 +216,8 @@ int main(int argc, char* argv[])
     bool retStop = responder.StopProcess();
     PrintInfo("StopProcess: " + std::to_string(retStop));
 
+    #ifdef WIN32
     system("pause");
+    #endif
     return 0;
 }

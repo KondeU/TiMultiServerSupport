@@ -12,7 +12,11 @@ include_directories(../../build/dependency/zeromq/zeromq/include)
 include_directories(../../build/dependency/zeromq/cppzmq/include)
 
 link_directories(../../build/dependency/zeromq/zeromq/lib)
-link_libraries(libzmq)
+if(WIN32)
+  link_libraries(libzmq)
+else()
+  link_libraries(pthread zmq)
+endif()
 
 file(GLOB_RECURSE INC ../../include/*)
 

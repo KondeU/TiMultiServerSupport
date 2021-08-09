@@ -26,7 +26,7 @@ void SignalHandler(int signum)
 int main(int argc, char* argv[])
 {
     signal(SIGINT, SignalHandler);
-    srand(unsigned int(time(NULL)));
+    srand(unsigned(time(NULL)));
 
     std::string ip = "127.0.0.1";
     int callfunc = 6019;
@@ -68,7 +68,7 @@ int main(int argc, char* argv[])
     #else
     ti::RpcAsyncBroadcast::Role::Client,
     #endif
-    "127.0.0.1", 6019, 6020);
+    "127.0.0.1", callfunc, broadcast);
     PrintInfo("START: " + std::to_string(ret1));
 
     for (unsigned int index = 0; g_loop; index++) {
@@ -85,6 +85,8 @@ int main(int argc, char* argv[])
     bool ret2 = rpc.Stop();
     PrintInfo("STOP: " + std::to_string(ret2));
 
+    #ifdef WIN32
     system("pause");
+    #endif
     return 0;
 }
