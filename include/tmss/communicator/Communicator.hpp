@@ -82,19 +82,18 @@ protected:
     using Container = std::unordered_map<InstValue, std::unique_ptr<T>>;
 
     template <typename T, class ...Args>
-    inline auto CreateInstance(Container<T>& container, const Args& ...args)
+    inline T* CreateInstance(Container<T>& container, const Args& ...args)
     {
-        auto instance = new T(context);
+        T* instance = new T(context);
         if (!instance) {
             // "!instance" means that
             // "instance == nullptr".
-            return instance;
+            return nullptr;
         }
         if (!instance->Init(args...)) {
             // Initialize failed.
             delete instance;
-            instance = nullptr;
-            return instance;
+            return nullptr;
         }
         container.emplace(MakeInstValue(instance), instance);
         return instance;

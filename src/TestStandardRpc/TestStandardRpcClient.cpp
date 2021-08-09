@@ -318,7 +318,7 @@ int main(int argc, char* argv[])
 {
     signal(SIGINT, SignalHandler);
 
-    srand(unsigned int(time(NULL))); // For rand
+    srand(unsigned(time(NULL))); // For rand
 
     std::vector<std::function<void(ti::RpcProcessRequest&)>>
     callFuncs = {
@@ -351,6 +351,8 @@ int main(int argc, char* argv[])
     bool ret2 = requester.DisconnectNetwork();
     PrintInfo("DisconnectNetwork:" + std::to_string(ret2));
 
+    #ifdef WIN32
     system("pause");
+    #endif
     return 0;
 }
