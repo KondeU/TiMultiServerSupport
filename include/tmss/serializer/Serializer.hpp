@@ -4,7 +4,7 @@
 #include <cereal/archives/portable_binary.hpp>
 #include "SupportType.hpp" // headers of <cereal/types/*>
 
-namespace ti {
+namespace tirpc {
 namespace serializer {
 
 class Serializer {

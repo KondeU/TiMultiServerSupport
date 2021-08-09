@@ -5,7 +5,7 @@
 #include "subpub/Subscriber.hpp"
 #include "subpub/Publisher.hpp"
 
-namespace ti {
+namespace tirpc {
 namespace communicator {
 
 class Communicator {

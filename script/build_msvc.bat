@@ -97,13 +97,13 @@ copy ..\dependency\zeromq\zeromq\lib\libzmq.lib libraries /Y
 copy ..\dependency\zeromq\zeromq\bin\libzmq.dll libraries /Y
 
 rem [### Copy USER CMakeLists file ###]
-copy ..\..\script\TMSS.CMakeLists.txt .\CMakeLists.txt /Y
+copy ..\..\script\TiRPC.cmake .\TiRPC.cmake /Y
 
 rem [### Copy LICENSE files ###]
 mkdir licenses
 copy ..\..\3rd\zeromq\COPYING.LESSER licenses\zeromq.txt /Y
 copy ..\..\3rd\cppzmq\LICENSE licenses\cppzmq.txt /Y
 copy ..\..\3rd\cereal\LICENSE licenses\cereal.txt /Y
-copy ..\..\License.txt .\License.txt /Y
+copy ..\..\LICENSE.txt .\License.txt /Y
 
 cd ..\..

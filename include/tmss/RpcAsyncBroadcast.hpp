@@ -4,7 +4,7 @@
 #include "serializer/FunctionSerializer.hpp"
 #include "RpcBasicTemplate.hpp"
 
-namespace ti {
+namespace tirpc {
 
 class RpcAsyncBroadcast : public MultiServerSupportBase {
 public:

@@ -1,8 +1,9 @@
 #pragma once
 
+#include <thread>
 #include <zmq_addon.hpp>
 
-namespace ti {
+namespace tirpc {
 namespace communicator {
 
 class Subscriber {
