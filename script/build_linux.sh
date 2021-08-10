@@ -1,9 +1,7 @@
 #!/bin/bash
 
 set -e
-# Please run this script by ../build.sh
-# Otherwise the path will be incorrect!
-TOP_PATH=$(cd "$(dirname "$0")"; pwd)
+TOP_PATH=$(cd "$(dirname "$0")/.."; pwd)
 
 # See ../build.sh
 BUILD_TYPE="$1"

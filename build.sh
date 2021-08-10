@@ -20,19 +20,19 @@ echo - BUILD_BITS: ${BUILD_BITS}
 
 if [ ${RUN_MODE} = "man" ] ; then
 echo Build by manual with default configuration, and debug mode.
-source ${CURRENT_PATH}/script/build_linux.sh Debug
+bash ${CURRENT_PATH}/script/build_linux.sh Debug
 elif [ ${RUN_MODE} = "linux" ] ; then
-source ${CURRENT_PATH}/script/build_linux.sh ${BUILD_TYPE} ${BUILD_BITS}
+bash ${CURRENT_PATH}/script/build_linux.sh ${BUILD_TYPE} ${BUILD_BITS}
 elif [ ${RUN_MODE} = "clean" ] ; then
-source ${CURRENT_PATH}/script/clean.sh
+bash ${CURRENT_PATH}/script/clean.sh
 elif [ ${RUN_MODE} = "config" ] ; then
-source ${CURRENT_PATH}/script/config.sh
+bash ${CURRENT_PATH}/script/config.sh
 elif [ ${RUN_MODE} = "ci" ] ; then
-source ${CURRENT_PATH}/script/ci.sh
+bash ${CURRENT_PATH}/script/ci.sh
 else
 echo Unknown run mode: ${RUN_MODE}
 fi
 
 if [ ${RUN_MODE} != "ci" ] ; then
-source ${CURRENT_PATH}/script/pause.sh
+bash ${CURRENT_PATH}/script/pause.sh
 fi
