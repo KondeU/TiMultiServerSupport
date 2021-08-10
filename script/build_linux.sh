@@ -118,7 +118,7 @@ cp -ruv ../dependency/cereal/include/* include/3rd/cereal
 
 echo - Copy TiRPC header files
 mkdir -p include/core
-cp -ruv ../../include include/core
+cp -ruv ../../include/* include/core
 
 echo - Copy ZeroMQ lib and dll files
 mkdir -p libraries
