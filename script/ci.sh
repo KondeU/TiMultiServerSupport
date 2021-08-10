@@ -1,6 +1,5 @@
 #!/bin/bash
 
 set -e
-# Please run this script by ../build.sh
-# Otherwise the path will be incorrect!
+TOP_PATH=$(cd "$(dirname "$0")/.."; pwd)
 # TODO: Build by CI
