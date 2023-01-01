@@ -15,7 +15,7 @@ jobs:
     - name: Build "build.bat ci"
       shell: cmd
       run: call "${{github.workspace}}\build.bat" ci
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v3
       with:
         name: TiRPC
         path: ${{github.workspace}}\artifact
